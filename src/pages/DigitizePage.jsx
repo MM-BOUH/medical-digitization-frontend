@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import FileUploader from '../components/FileUploader';
 import StatusIndicator from '../components/StatusIndicator';
 import ExtractionModal from '../components/ExtractionModal';
-import { digitizeReport, saveExtractedData } from '../actions/medicalReports';
+import { digitizeReport } from '../actions/medicalReports';
 
 /**
  * DigitizePage Component
@@ -114,29 +114,23 @@ const DigitizePage = () => {
   };
 
   /**
-   * Handle data confirmation from modal
+   * Handle successful save from modal
    */
-  const handleConfirmData = async (confirmedData) => {
-    try {
-      await saveExtractedData({
-        ...confirmedData,
-        patient_id: patientId,
-        healthcare_worker_id: healthcareWorkerId,
-      });
-
-      // Success! Reset form
-      setShowModal(false);
-      setSelectedFile(null);
-      setStatus('idle');
-      setStatusMessage('');
-      setReportType('');
-      setExtractedData(null);
-      
-      alert('Data saved successfully!');
-    } catch (error) {
-      console.error('Error saving data:', error);
-      throw error; // Let modal handle the error
-    }
+  const handleSaveSuccess = (result) => {
+    console.log('Data saved successfully:', result);
+    
+    // Success! Reset form
+    setShowModal(false);
+    setSelectedFile(null);
+    setStatus('idle');
+    setStatusMessage('');
+    setReportType('');
+    setExtractedData(null);
+    setPatientId('');
+    setHealthcareWorkerId('');
+    
+    // Optional: Show success notification
+    alert('Medical report saved successfully!');
   };
 
   /**
@@ -326,7 +320,9 @@ const DigitizePage = () => {
         extractedData={extractedData}
         imageFile={selectedFile}
         reportType={reportType}
-        onConfirm={handleConfirmData}
+        patientId={patientId}
+        healthcareWorkerId={healthcareWorkerId}
+        onSaveSuccess={handleSaveSuccess}
       />
     </div>
   );

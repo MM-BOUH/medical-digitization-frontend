@@ -32,32 +32,7 @@ export const digitizeReport = async (imageFile, patientId, healthcareWorkerId) =
   }
 };
 
-/**
- * Save the confirmed extracted data back to the backend
- * @param {Object} reportData - The confirmed medical report data
- * @returns {Promise<Object>} Response from the server
- */
-export const saveExtractedData = async (reportData) => {
-  try {
-    const response = await fetch(`${BASE_URL}/smrd/save-extracted-data/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reportData),
-    });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to save extracted data');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error saving extracted data:', error);
-    throw error;
-  }
-};
 
 /**
  * Fetch patients list (if needed for dropdown)
@@ -99,4 +74,20 @@ export const fetchHealthcareWorkers = async () => {
     console.error('Error fetching healthcare workers:', error);
     throw error;
   }
+};
+
+
+
+// For storing
+export const saveExtractedData = async (formData) => {
+  const response = await fetch(`${BASE_URL}/smrd/store/`, {
+    method: 'POST',
+    body: formData, // FormData with all fields
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to save extracted data');
+  }
+  
+  return response.json();
 };

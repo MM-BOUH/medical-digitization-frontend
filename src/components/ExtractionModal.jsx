@@ -1,23 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import EditableField from './EditableField';
+import { saveExtractedData } from '../actions/medicalReports';
 
 /**
  * ExtractionModal Component
  * Displays extracted data in a split-screen layout with image preview and editable fields
  * Fully responsive with mobile, tablet, and desktop layouts
  */
-const ExtractionModal = ({ isOpen, onClose, extractedData, imageFile, reportType, onConfirm }) => {
+const ExtractionModal = ({ 
+  isOpen, 
+  onClose, 
+  extractedData, 
+  imageFile, 
+  reportType, 
+  patientId, 
+  healthcareWorkerId,
+  onSaveSuccess 
+}) => {
   const [metadata, setMetadata] = useState({});
   const [results, setResults] = useState([]);
   const [imageUrl, setImageUrl] = useState(null);
   const [imageZoom, setImageZoom] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Initialize data when modal opens
   useEffect(() => {
     if (isOpen && extractedData) {
       setMetadata(extractedData.metadata || {});
       setResults(extractedData.results || []);
+      setShowSuccessMessage(false);
+      setErrorMessage('');
     }
   }, [isOpen, extractedData]);
 
@@ -139,20 +153,45 @@ const ExtractionModal = ({ isOpen, onClose, extractedData, imageFile, reportType
   };
 
   /**
-   * Handle form confirmation
+   * Handle form confirmation and save to backend
    */
   const handleConfirm = async () => {
     setIsSaving(true);
+    setErrorMessage('');
+    
     try {
-      await onConfirm({
+      // Prepare the edited extracted data
+      const editedExtractedData = {
         metadata,
         results,
-        report_type: reportType,
-      });
-      onClose();
+      };
+
+      // Prepare FormData for backend
+      const formData = new FormData();
+      formData.append('patient_id', patientId);
+      formData.append('healthcare_worker_id', healthcareWorkerId);
+      formData.append('image', imageFile); // Original image file
+      formData.append('report_type', reportType);
+      formData.append('extracted_data', JSON.stringify(editedExtractedData));
+
+      // Call the API to save
+      const result = await saveExtractedData(formData);
+      
+      // Show success message
+      setShowSuccessMessage(true);
+      
+      // Close modal after 2 seconds and notify parent
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+        onClose();
+        if (onSaveSuccess) {
+          onSaveSuccess(result);
+        }
+      }, 2000);
+
     } catch (error) {
       console.error('Error saving data:', error);
-      alert('Failed to save data. Please try again.');
+      setErrorMessage('Failed to save data. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -209,6 +248,47 @@ const ExtractionModal = ({ isOpen, onClose, extractedData, imageFile, reportType
             </svg>
           </button>
         </div>
+
+        {/* Success/Error Messages */}
+        {showSuccessMessage && (
+          <div className="mx-4 mt-4 md:mx-6 md:mt-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-green-500 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-green-800 font-medium">Data saved successfully!</p>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="mx-4 mt-4 md:mx-6 md:mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-red-500 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-red-800 font-medium">{errorMessage}</p>
+          </div>
+        )}
 
         {/* Content - Split Layout */}
         <div className="flex-grow flex flex-col md:flex-row gap-4 md:gap-6 p-4 md:p-6 overflow-hidden">
@@ -438,7 +518,8 @@ const ExtractionModal = ({ isOpen, onClose, extractedData, imageFile, reportType
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 md:p-6 border-t border-gray-200 bg-gray-50">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg shadow-sm transition-colors"
+            disabled={isSaving}
+            className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Cancel"
           >
             Cancel
@@ -446,10 +527,36 @@ const ExtractionModal = ({ isOpen, onClose, extractedData, imageFile, reportType
           <button
             onClick={handleConfirm}
             disabled={isSaving}
-            className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-white bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 rounded-lg shadow-md transition-colors"
+            className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-white bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
             aria-label="Confirm and save"
           >
-            {isSaving ? 'Saving...' : 'Confirm & Save'}
+            {isSaving ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Saving...
+              </>
+            ) : (
+              'Confirm & Save'
+            )}
           </button>
         </div>
       </div>
