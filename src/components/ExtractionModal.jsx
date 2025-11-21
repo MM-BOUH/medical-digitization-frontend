@@ -12,7 +12,7 @@ const ExtractionModal = ({
   onClose, 
   extractedData, 
   imageFile, 
-  reportType, 
+  reportType: initialReportType, 
   patientId, 
   healthcareWorkerId,
   onSaveSuccess 
@@ -24,6 +24,7 @@ const ExtractionModal = ({
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [reportType, setReportType] = useState(initialReportType || '');
 
   // Initialize data when modal opens
   useEffect(() => {
@@ -32,8 +33,9 @@ const ExtractionModal = ({
       setResults(extractedData.results || []);
       setShowSuccessMessage(false);
       setErrorMessage('');
+      setReportType(initialReportType || '');
     }
-  }, [isOpen, extractedData]);
+  }, [isOpen, extractedData, initialReportType]);
 
   // Create image preview URL
   useEffect(() => {
@@ -171,7 +173,7 @@ const ExtractionModal = ({
       formData.append('patient_id', patientId);
       formData.append('healthcare_worker_id', healthcareWorkerId);
       formData.append('image', imageFile); // Original image file
-      formData.append('report_type', reportType);
+      formData.append('report_type', reportType); // Use the updated report type
       formData.append('extracted_data', JSON.stringify(editedExtractedData));
 
       // Call the API to save
@@ -180,14 +182,14 @@ const ExtractionModal = ({
       // Show success message
       setShowSuccessMessage(true);
       
-      // Close modal after 2 seconds and notify parent
+      // Close modal after 1.5 seconds and notify parent
       setTimeout(() => {
         setShowSuccessMessage(false);
         onClose();
         if (onSaveSuccess) {
           onSaveSuccess(result);
         }
-      }, 2000);
+      }, 1500);
 
     } catch (error) {
       console.error('Error saving data:', error);
@@ -217,15 +219,28 @@ const ExtractionModal = ({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gray-50">
-          <div>
+          <div className="flex-1">
             <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-800">
               Review Extracted Data
             </h2>
-            {reportType && (
-              <p className="text-xs md:text-sm text-blue-600 mt-1">
-                Report Type: {reportType}
-              </p>
-            )}
+            {/* Editable Report Type Dropdown */}
+            <div className="mt-2 flex items-center gap-2">
+              <label htmlFor="reportType" className="text-xs md:text-sm font-medium text-gray-600">
+                Report Type:
+              </label>
+              <select
+                id="reportType"
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value)}
+                className="px-3 py-1 text-xs md:text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+              >
+                <option value="Hematology">Hematology</option>
+                <option value="Clinical Chemistry">Clinical Chemistry</option>
+                <option value="Microbiology">Microbiology</option>
+                <option value="Urinalysis">Urinalysis</option>
+                <option value="Serology/Immunology">Serology/Immunology</option>
+              </select>
+            </div>
           </div>
           <button
             onClick={onClose}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import DigitizePage from './pages/DigitizePage';
+import ReportsListPage from './pages/ReportsListPage';
 
 /**
  * Main App Component
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           <Route path="/" element={<DigitizePage />} />
           <Route path="/digitize" element={<DigitizePage />} />
+          <Route path="/reports" element={<ReportsListPage />} />
         </Routes>
       </div>
     </Router>

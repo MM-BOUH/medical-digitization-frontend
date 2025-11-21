@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import FileUploader from '../components/FileUploader';
 import StatusIndicator from '../components/StatusIndicator';
 import ExtractionModal from '../components/ExtractionModal';
@@ -10,10 +11,12 @@ import { digitizeReport } from '../actions/medicalReports';
  * Handles file upload, classification, extraction, and data confirmation
  */
 const DigitizePage = () => {
+  const navigate = useNavigate(); // Add this
+  
   // State management
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [status, setStatus] = useState('idle'); // idle, analyzing, classified, extracting, success, error, not-medical
+  const [status, setStatus] = useState('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [reportType, setReportType] = useState('');
   const [extractedData, setExtractedData] = useState(null);
@@ -28,7 +31,6 @@ const DigitizePage = () => {
    */
   const handleFileSelect = (file) => {
     setSelectedFile(file);
-    // Reset states when new file is selected
     if (file) {
       setStatus('idle');
       setStatusMessage('');
@@ -44,7 +46,6 @@ const DigitizePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (!selectedFile) {
       alert('Please select a file to upload');
       return;
@@ -55,16 +56,13 @@ const DigitizePage = () => {
       return;
     }
 
-    // Start upload and digitization process
     setIsUploading(true);
     setStatus('analyzing');
     setStatusMessage('Analyzing document...');
 
     try {
-      // Call backend API
       const response = await digitizeReport(selectedFile, patientId, healthcareWorkerId);
 
-      // Check if the image was rejected
       if (response.error) {
         if (response.error.includes('not a valid medical report')) {
           setStatus('not-medical');
@@ -77,26 +75,21 @@ const DigitizePage = () => {
         return;
       }
 
-      // Image was classified successfully
       const classifiedType = response.report_type;
       setReportType(classifiedType);
       setStatus('classified');
       setStatusMessage(`Classified as ${classifiedType}`);
 
-      // Wait a moment to show classification result
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Now show extracting status
       setStatus('extracting');
       setStatusMessage('Extracting data...');
 
-      // The extraction is already done in the backend response
       if (response.extracted_data) {
         setExtractedData(response.extracted_data);
         setStatus('success');
         setStatusMessage('Extraction complete!');
         
-        // Wait a moment then show modal
         await new Promise((resolve) => setTimeout(resolve, 500));
         setShowModal(true);
       } else {
@@ -114,23 +107,16 @@ const DigitizePage = () => {
   };
 
   /**
-   * Handle successful save from modal
+   * Handle successful save from modal - Navigate to reports list
    */
   const handleSaveSuccess = (result) => {
     console.log('Data saved successfully:', result);
     
-    // Success! Reset form
+    // Close modal
     setShowModal(false);
-    setSelectedFile(null);
-    setStatus('idle');
-    setStatusMessage('');
-    setReportType('');
-    setExtractedData(null);
-    setPatientId('');
-    setHealthcareWorkerId('');
     
-    // Optional: Show success notification
-    alert('Medical report saved successfully!');
+    // Navigate to reports list page immediately - NO ALERT
+    navigate('/reports');
   };
 
   /**
@@ -153,17 +139,48 @@ const DigitizePage = () => {
     setShowModal(false);
   };
 
+  /**
+   * Navigate to reports list
+   */
+  const handleViewReports = () => {
+    navigate('/reports');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
-            Medical Report Digitization
-          </h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-600">
-            Upload scanned medical reports for automatic classification and data extraction
-          </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
+                Medical Report Digitization
+              </h1>
+              <p className="mt-2 text-sm sm:text-base text-gray-600">
+                Upload scanned medical reports for automatic classification and data extraction
+              </p>
+            </div>
+            <button
+              onClick={handleViewReports}
+              className="flex items-center gap-2 px-5 py-2.5 text-sm md:text-base font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              View Reports
+            </button>
+          </div>
         </div>
       </header>
 
