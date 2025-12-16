@@ -177,3 +177,59 @@ export const fetchHealthcareWorkers = async () => {
     throw error;
   }
 };
+
+
+/**
+ * Fetch details of a specific medical report
+ * @param {number} reportId - Report ID
+ * @returns {Promise<Object>} Report details
+ */
+ export const fetchReportDetail = async (reportId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/smrd/report/detail/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ report_id: reportId }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch report details: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error in fetchReportDetail:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing medical report
+ * @param {number} reportId - Report ID to update
+ * @param {FormData} formData - Form data with updated fields
+ * @returns {Promise<Object>} Updated report data
+ */
+ export const updateExtractedData = async (reportId, formData) => {
+  try {
+    // Add report_id to formData
+    formData.append('report_id', reportId);
+    
+    const response = await fetch(`${BASE_URL}/smrd/report/update/`, {
+      method: 'PUT',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to update report');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Error updating report:', error);
+    throw error;
+  }
+};

@@ -2,11 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import DigitizePage from './pages/DigitizePage';
 import ReportsListPage from './pages/ReportsListPage';
+import ReportDetailPage from './pages/ReportDetailPage';
 
-/**
- * Main App Component
- * Sets up routing and global application structure
- */
 function App() {
   return (
     <Router>
@@ -15,6 +12,7 @@ function App() {
           <Route path="/" element={<DigitizePage />} />
           <Route path="/digitize" element={<DigitizePage />} />
           <Route path="/reports" element={<ReportsListPage />} />
+          <Route path="/reports/:id" element={<ReportDetailPage />} /> {/* Add this */}
         </Routes>
       </div>
     </Router>
