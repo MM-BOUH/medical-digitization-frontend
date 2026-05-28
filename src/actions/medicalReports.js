@@ -1,4 +1,5 @@
 // API Base URL - Update this to match your Django backend
+// const BASE_URL = 'http://localhost';
 const BASE_URL = 'https://phc-backend-9v1f.onrender.com';
 
 /**
