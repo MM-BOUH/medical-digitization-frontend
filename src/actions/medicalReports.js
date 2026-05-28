@@ -1,5 +1,5 @@
 // API Base URL - Update this to match your Django backend
-const BASE_URL = 'http://localhost:80';
+const BASE_URL = 'https://phc-backend-9v1f.onrender.com';
 
 /**
  * Digitize a medical report by uploading an image
