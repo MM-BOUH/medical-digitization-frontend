@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import EditableField from './EditableField';
-import { updateExtractedData } from '../actions/medicalReports';
+import { updateExtractedData, resolveImageUrl } from '../actions/medicalReports';
 
 /**
  * ReportDetailModal Component
@@ -338,7 +338,7 @@ const ReportDetailModal = ({ isOpen, onClose, report, onUpdateSuccess }) => {
             <div className="flex-grow overflow-auto flex items-center justify-center p-4">
               {report.image ? (
                 <img
-                  src={report.image}
+                  src={resolveImageUrl(report.image)}
                   alt="Medical Report"
                   className="max-w-full h-auto object-contain"
                   style={{

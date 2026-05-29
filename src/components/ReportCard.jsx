@@ -1,4 +1,5 @@
 import React from 'react';
+import { resolveImageUrl } from '../actions/medicalReports';
 
 /**
  * ReportCard Component
@@ -36,7 +37,7 @@ const ReportCard = ({ report, onView }) => {
       <div className="h-48 bg-gray-900 overflow-hidden">
         {report.image ? (
           <img
-            src={report.image}
+            src={resolveImageUrl(report.image)}
             alt="Medical Report"
             className="w-full h-full object-contain"
           />

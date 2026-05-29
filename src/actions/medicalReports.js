@@ -1,7 +1,10 @@
-// API Base URL - Update this to match your Django backend
-// const BASE_URL = 'http://localhost';
-const BASE_URL = 'https://phc-backend-9v1f.onrender.com';
+export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:80';
 
+export const resolveImageUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${BASE_URL}${url}`;
+};
 /**
  * Digitize a medical report by uploading an image
  * @param {File} imageFile - The medical report image file
@@ -10,6 +13,9 @@ const BASE_URL = 'https://phc-backend-9v1f.onrender.com';
  * @returns {Promise<Object>} Response containing classification and extraction results
  */
 export const digitizeReport = async (imageFile, patientId, healthcareWorkerId) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120_000); // 2 min for cold start + AI processing
+
   try {
     const formData = new FormData();
     formData.append('image', imageFile);
@@ -19,17 +25,26 @@ export const digitizeReport = async (imageFile, patientId, healthcareWorkerId) =
     const response = await fetch(`${BASE_URL}/smrd/digitize/`, {
       method: 'POST',
       body: formData,
+      signal: controller.signal,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to digitize report');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Server error (${response.status})`);
     }
 
     return await response.json();
   } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out. The server may be starting up — please try again in a moment.');
+    }
+    if (error.message === 'Failed to fetch') {
+      throw new Error('Could not reach the server. Check your internet connection or try again shortly.');
+    }
     console.error('Error digitizing report:', error);
     throw error;
+  } finally {
+    clearTimeout(timeout);
   }
 };
 

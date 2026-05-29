@@ -123,6 +123,13 @@ const StatusIndicator = ({ status, message, reportType }) => {
           {message}
         </p>
 
+        {/* Hint during long server wait */}
+        {isAnalyzing && (
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            This may take up to 60 seconds if the server is starting up.
+          </p>
+        )}
+
         {/* Show report type if classified */}
         {reportType && isClassified && (
           <p className="text-xs sm:text-sm md:text-base text-blue-600 font-medium mt-2">
