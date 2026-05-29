@@ -7,15 +7,16 @@ import { saveExtractedData } from '../actions/medicalReports';
  * Displays extracted data in a split-screen layout with image preview and editable fields
  * Fully responsive with mobile, tablet, and desktop layouts
  */
-const ExtractionModal = ({ 
-  isOpen, 
-  onClose, 
-  extractedData, 
-  imageFile, 
-  reportType: initialReportType, 
-  patientId, 
+const ExtractionModal = ({
+  isOpen,
+  onClose,
+  extractedData,
+  imageFile,
+  reportType: initialReportType,
+  patientId,
   healthcareWorkerId,
-  onSaveSuccess 
+  onSaveSuccess,
+  isAnonymous = false,
 }) => {
   const [metadata, setMetadata] = useState({});
   const [results, setResults] = useState([]);
@@ -205,6 +206,53 @@ const ExtractionModal = ({
   const handleZoomIn = () => setImageZoom((prev) => Math.min(prev + 0.25, 3));
   const handleZoomOut = () => setImageZoom((prev) => Math.max(prev - 0.25, 0.5));
   const handleZoomReset = () => setImageZoom(1);
+
+  const handleExportJSON = () => {
+    const exportData = { report_type: reportType, extracted_data: { metadata, results } };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `medical_report_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['report_type', 'patient_name', 'age', 'gender', 'report_date', 'lab_name', 'doctor_name', 'section', 'test_name', 'value', 'unit', 'reference_range'];
+    const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = [headers.join(',')];
+
+    results.forEach((result) => {
+      if (result.result_data && result.result_data.length > 0) {
+        result.result_data.forEach((data) => {
+          rows.push([
+            reportType,
+            metadata.patient_name, metadata.age, metadata.gender,
+            metadata.report_date, metadata.lab_name, metadata.doctor_name,
+            result.result_type,
+            data.test_name, data.value, data.unit, data.reference_range,
+          ].map(escape).join(','));
+        });
+      } else if (result.text_data) {
+        rows.push([
+          reportType,
+          metadata.patient_name, metadata.age, metadata.gender,
+          metadata.report_date, metadata.lab_name, metadata.doctor_name,
+          result.result_type,
+          '', result.text_data, '', '',
+        ].map(escape).join(','));
+      }
+    });
+
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `medical_report_${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div
@@ -535,44 +583,50 @@ const ExtractionModal = ({
             onClick={onClose}
             disabled={isSaving}
             className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Cancel"
           >
             Cancel
           </button>
-          <button
-            onClick={handleConfirm}
-            disabled={isSaving}
-            className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-white bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
-            aria-label="Confirm and save"
-          >
-            {isSaving ? (
-              <>
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
+
+          {isAnonymous ? (
+            <>
+              <button
+                onClick={handleExportCSV}
+                className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Saving...
-              </>
-            ) : (
-              'Confirm & Save'
-            )}
-          </button>
+                Export CSV
+              </button>
+              <button
+                onClick={handleExportJSON}
+                className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-white bg-green-500 hover:bg-green-600 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export JSON
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleConfirm}
+              disabled={isSaving}
+              className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-white bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
+            >
+              {isSaving ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                'Confirm & Save'
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

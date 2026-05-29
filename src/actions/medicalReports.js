@@ -6,6 +6,44 @@ export const resolveImageUrl = (url) => {
   return `${BASE_URL}${url}`;
 };
 /**
+ * Digitize a medical report without linking to PHC (no patient/worker IDs, nothing saved to DB)
+ * @param {File} imageFile - The medical report image file
+ * @returns {Promise<Object>} Response containing classification and extraction results
+ */
+export const digitizeAnonymous = async (imageFile) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120_000);
+
+  try {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    const response = await fetch(`${BASE_URL}/smrd/digitize-anonymous/`, {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Server error (${response.status})`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out. The server may be starting up — please try again in a moment.');
+    }
+    if (error.message === 'Failed to fetch') {
+      throw new Error('Could not reach the server. Check your internet connection or try again shortly.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
+/**
  * Digitize a medical report by uploading an image
  * @param {File} imageFile - The medical report image file
  * @param {string|number} patientId - Patient ID

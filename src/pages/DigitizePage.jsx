@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add this import
+import { useNavigate } from 'react-router-dom';
 import FileUploader from '../components/FileUploader';
 import StatusIndicator from '../components/StatusIndicator';
 import ExtractionModal from '../components/ExtractionModal';
-import { digitizeReport } from '../actions/medicalReports';
+import { digitizeReport, digitizeAnonymous } from '../actions/medicalReports';
 
-/**
- * DigitizePage Component
- * Main page for medical report digitization workflow
- * Handles file upload, classification, extraction, and data confirmation
- */
 const DigitizePage = () => {
-  const navigate = useNavigate(); // Add this
-  
-  // State management
+  const navigate = useNavigate();
+
+  const [mode, setMode] = useState(null); // null | 'phc' | 'anonymous'
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [status, setStatus] = useState('idle');
@@ -21,14 +16,10 @@ const DigitizePage = () => {
   const [reportType, setReportType] = useState('');
   const [extractedData, setExtractedData] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  
-  // Form inputs for patient and healthcare worker IDs
   const [patientId, setPatientId] = useState('');
   const [healthcareWorkerId, setHealthcareWorkerId] = useState('');
 
-  /**
-   * Handle file selection from FileUploader
-   */
+
   const handleFileSelect = (file) => {
     setSelectedFile(file);
     if (file) {
@@ -40,9 +31,6 @@ const DigitizePage = () => {
     }
   };
 
-  /**
-   * Handle form submission - Start digitization process
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -51,8 +39,8 @@ const DigitizePage = () => {
       return;
     }
 
-    if (!patientId || !healthcareWorkerId) {
-      alert('Please enter both Patient ID and Healthcare Worker ID');
+    if (mode === 'phc' && (!patientId || !healthcareWorkerId)) {
+      alert('Please select both a patient and a healthcare worker');
       return;
     }
 
@@ -61,7 +49,9 @@ const DigitizePage = () => {
     setStatusMessage('Analyzing document...');
 
     try {
-      const response = await digitizeReport(selectedFile, patientId, healthcareWorkerId);
+      const response = mode === 'phc'
+        ? await digitizeReport(selectedFile, patientId, healthcareWorkerId)
+        : await digitizeAnonymous(selectedFile);
 
       if (response.error) {
         if (response.error.includes('not a valid medical report')) {
@@ -75,10 +65,9 @@ const DigitizePage = () => {
         return;
       }
 
-      const classifiedType = response.report_type;
-      setReportType(classifiedType);
+      setReportType(response.report_type);
       setStatus('classified');
-      setStatusMessage(`Classified as ${classifiedType}`);
+      setStatusMessage(`Classified as ${response.report_type}`);
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -89,16 +78,13 @@ const DigitizePage = () => {
         setExtractedData(response.extracted_data);
         setStatus('success');
         setStatusMessage('Extraction complete!');
-        
         await new Promise((resolve) => setTimeout(resolve, 500));
         setShowModal(true);
       } else {
         setStatus('error');
         setStatusMessage('Failed to extract data');
       }
-
     } catch (error) {
-      console.error('Digitization error:', error);
       setStatus('error');
       setStatusMessage(error.message || 'An error occurred during digitization');
     } finally {
@@ -106,29 +92,11 @@ const DigitizePage = () => {
     }
   };
 
-  /**
-   * Handle successful save from modal - Navigate to reports list
-   */
-  const handleSaveSuccess = (result) => {
-    console.log('Data saved successfully:', result);
-    
-    // Close modal
+  const handleSaveSuccess = () => {
     setShowModal(false);
-    
-    // Navigate to reports list page immediately - NO ALERT
     navigate('/reports');
   };
 
-  /**
-   * Handle modal close
-   */
-  const handleModalClose = () => {
-    setShowModal(false);
-  };
-
-  /**
-   * Reset form
-   */
   const handleReset = () => {
     setSelectedFile(null);
     setIsUploading(false);
@@ -139,11 +107,11 @@ const DigitizePage = () => {
     setShowModal(false);
   };
 
-  /**
-   * Navigate to reports list
-   */
-  const handleViewReports = () => {
-    navigate('/reports');
+  const handleChangeMode = () => {
+    handleReset();
+    setMode(null);
+    setPatientId('');
+    setHealthcareWorkerId('');
   };
 
   return (
@@ -161,22 +129,11 @@ const DigitizePage = () => {
               </p>
             </div>
             <button
-              onClick={handleViewReports}
+              onClick={() => navigate('/reports')}
               className="flex items-center gap-2 px-5 py-2.5 text-sm md:text-base font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               View Reports
             </button>
@@ -184,165 +141,200 @@ const DigitizePage = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 lg:py-12">
-        <div className="bg-white rounded-lg shadow-lg p-6 sm:p-8 md:p-10">
-          {/* Form Inputs */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* ID Input Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              {/* Patient ID */}
-              <div>
-                <label
-                  htmlFor="patientId"
-                  className="block text-sm md:text-base font-medium text-gray-700 mb-2"
-                >
-                  Patient ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="patientId"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  placeholder="Enter patient ID"
-                  className="w-full px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  required
-                  disabled={isUploading}
-                />
+      {/* Mode selection */}
+      {mode === null && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <h2 className="text-xl font-semibold text-gray-700 text-center mb-8">
+            How would you like to proceed?
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <button
+              onClick={() => setMode('phc')}
+              className="group flex flex-col items-center gap-4 bg-white rounded-xl shadow-md hover:shadow-lg border-2 border-transparent hover:border-blue-500 p-8 transition-all"
+            >
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
               </div>
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-gray-800 mb-1">PHC Mode</h3>
+                <p className="text-sm text-gray-500">Link to a patient and healthcare worker. Report is saved to the PHC system.</p>
+              </div>
+              <span className="mt-auto px-4 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 rounded-full">Save to PHC</span>
+            </button>
 
-              {/* Healthcare Worker ID */}
-              <div>
-                <label
-                  htmlFor="healthcareWorkerId"
-                  className="block text-sm md:text-base font-medium text-gray-700 mb-2"
-                >
-                  Healthcare Worker ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="healthcareWorkerId"
-                  value={healthcareWorkerId}
-                  onChange={(e) => setHealthcareWorkerId(e.target.value)}
-                  placeholder="Enter healthcare worker ID"
-                  className="w-full px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  required
-                  disabled={isUploading}
-                />
+            <button
+              onClick={() => setMode('anonymous')}
+              className="group flex flex-col items-center gap-4 bg-white rounded-xl shadow-md hover:shadow-lg border-2 border-transparent hover:border-green-500 p-8 transition-all"
+            >
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center group-hover:bg-green-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
               </div>
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-gray-800 mb-1">Scan & Extract</h3>
+                <p className="text-sm text-gray-500">No patient ID needed. Scan any report and export the result as JSON or CSV.</p>
+              </div>
+              <span className="mt-auto px-4 py-1.5 text-xs font-semibold text-green-600 bg-green-50 rounded-full">Export JSON / CSV</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Digitize form */}
+      {mode !== null && (
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 lg:py-12">
+          <div className="bg-white rounded-lg shadow-lg p-6 sm:p-8 md:p-10">
+            {/* Mode badge + change */}
+            <div className="flex items-center justify-between mb-6">
+              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${mode === 'phc' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                {mode === 'phc' ? 'PHC Mode' : 'Scan & Extract'}
+              </span>
+              <button
+                onClick={handleChangeMode}
+                className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
+              >
+                Change mode
+              </button>
             </div>
 
-            {/* File Uploader */}
-            <div className="mt-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* PHC-only: Patient ID + Healthcare Worker ID */}
+              {mode === 'phc' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div>
+                    <label htmlFor="patientId" className="block text-sm md:text-base font-medium text-gray-700 mb-2">
+                      Patient ID <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="patientId"
+                      value={patientId}
+                      onChange={(e) => setPatientId(e.target.value)}
+                      placeholder="Enter patient ID"
+                      className="w-full px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      required
+                      disabled={isUploading}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="healthcareWorkerId" className="block text-sm md:text-base font-medium text-gray-700 mb-2">
+                      Healthcare Worker ID <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="healthcareWorkerId"
+                      value={healthcareWorkerId}
+                      onChange={(e) => setHealthcareWorkerId(e.target.value)}
+                      placeholder="Enter healthcare worker ID"
+                      className="w-full px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      required
+                      disabled={isUploading}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* File Uploader */}
               <FileUploader
                 onFileSelect={handleFileSelect}
                 isUploading={isUploading}
                 disabled={isUploading}
               />
-            </div>
 
-            {/* Status Display */}
-            {status !== 'idle' && (
-              <div className="mt-8">
-                <StatusIndicator
-                  status={status}
-                  message={statusMessage}
-                  reportType={reportType}
-                />
-              </div>
-            )}
+              {/* Status */}
+              {status !== 'idle' && (
+                <div className="mt-8">
+                  <StatusIndicator status={status} message={statusMessage} reportType={reportType} />
+                </div>
+              )}
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 mt-8">
-              {status === 'idle' || status === 'error' || status === 'not-medical' ? (
-                <>
-                  <button
-                    type="submit"
-                    disabled={!selectedFile || !patientId || !healthcareWorkerId || isUploading}
-                    className="px-6 py-3 md:px-8 md:py-3.5 text-sm md:text-base font-semibold text-white bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg shadow-md transition-colors w-full sm:w-auto"
-                  >
-                    Start Digitization
-                  </button>
-
-                  {(status === 'error' || status === 'not-medical') && (
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 mt-8">
+                {(status === 'idle' || status === 'error' || status === 'not-medical') ? (
+                  <>
                     <button
-                      type="button"
-                      onClick={handleReset}
-                      className="px-6 py-3 md:px-8 md:py-3.5 text-sm md:text-base font-semibold text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg shadow-sm transition-colors w-full sm:w-auto"
+                      type="submit"
+                      disabled={
+                        !selectedFile ||
+                        (mode === 'phc' && (!patientId || !healthcareWorkerId)) ||
+                        isUploading
+                      }
+                      className="px-6 py-3 md:px-8 md:py-3.5 text-sm md:text-base font-semibold text-white bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg shadow-md transition-colors w-full sm:w-auto"
                     >
-                      Try Another File
+                      Start Digitization
                     </button>
-                  )}
-                </>
-              ) : status === 'success' ? (
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-6 py-3 md:px-8 md:py-3.5 text-sm md:text-base font-semibold text-white bg-green-500 hover:bg-green-600 rounded-lg shadow-md transition-colors w-full sm:w-auto"
-                >
-                  Digitize Another Report
-                </button>
-              ) : null}
-            </div>
-          </form>
-        </div>
+                    {(status === 'error' || status === 'not-medical') && (
+                      <button
+                        type="button"
+                        onClick={handleReset}
+                        className="px-6 py-3 md:px-8 md:py-3.5 text-sm md:text-base font-semibold text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg shadow-sm transition-colors w-full sm:w-auto"
+                      >
+                        Try Another File
+                      </button>
+                    )}
+                  </>
+                ) : status === 'success' ? (
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="px-6 py-3 md:px-8 md:py-3.5 text-sm md:text-base font-semibold text-white bg-green-500 hover:bg-green-600 rounded-lg shadow-md transition-colors w-full sm:w-auto"
+                  >
+                    Digitize Another Report
+                  </button>
+                ) : null}
+              </div>
+            </form>
+          </div>
 
-        {/* Instructions Card */}
-        <div className="mt-8 bg-blue-50 rounded-lg p-6 sm:p-8">
-          <h2 className="text-lg md:text-xl font-semibold text-blue-900 mb-4">
-            How It Works
-          </h2>
-          <ol className="space-y-3 text-sm md:text-base text-blue-800">
-            <li className="flex items-start gap-3">
-              <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded-full text-xs font-bold">
-                1
-              </span>
-              <span>Enter the Patient ID and Healthcare Worker ID</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded-full text-xs font-bold">
-                2
-              </span>
-              <span>Upload a clear scan or photo of the medical report (JPG, PNG, or PDF)</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded-full text-xs font-bold">
-                3
-              </span>
-              <span>
-                The system will automatically classify the report type (Hematology, Clinical
-                Chemistry, etc.)
-              </span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded-full text-xs font-bold">
-                4
-              </span>
-              <span>Review and edit the extracted data before saving</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded-full text-xs font-bold">
-                5
-              </span>
-              <span>Confirm and save the digitized report to the database</span>
-            </li>
-          </ol>
-        </div>
-      </main>
+          {/* How it works */}
+          <div className="mt-8 bg-blue-50 rounded-lg p-6 sm:p-8">
+            <h2 className="text-lg md:text-xl font-semibold text-blue-900 mb-4">How It Works</h2>
+            <ol className="space-y-3 text-sm md:text-base text-blue-800">
+              {mode === 'phc' ? (
+                <>
+                  <li className="flex items-start gap-3"><StepBadge n={1} />Select a patient and healthcare worker from the PHC system</li>
+                  <li className="flex items-start gap-3"><StepBadge n={2} />Upload a clear scan or photo of the medical report (JPG, PNG, or PDF)</li>
+                  <li className="flex items-start gap-3"><StepBadge n={3} />The system classifies the report type and extracts structured data</li>
+                  <li className="flex items-start gap-3"><StepBadge n={4} />Review and edit the extracted data before saving</li>
+                  <li className="flex items-start gap-3"><StepBadge n={5} />Confirm and save the digitized report to the PHC database</li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-start gap-3"><StepBadge n={1} />Upload a clear scan or photo of the medical report (JPG, PNG, or PDF)</li>
+                  <li className="flex items-start gap-3"><StepBadge n={2} />The system classifies the report type and extracts structured data</li>
+                  <li className="flex items-start gap-3"><StepBadge n={3} />Review and edit the extracted data</li>
+                  <li className="flex items-start gap-3"><StepBadge n={4} />Export the result as JSON or CSV — nothing is saved to the database</li>
+                </>
+              )}
+            </ol>
+          </div>
+        </main>
+      )}
 
       {/* Extraction Modal */}
       <ExtractionModal
         isOpen={showModal}
-        onClose={handleModalClose}
+        onClose={() => setShowModal(false)}
         extractedData={extractedData}
         imageFile={selectedFile}
         reportType={reportType}
         patientId={patientId}
         healthcareWorkerId={healthcareWorkerId}
         onSaveSuccess={handleSaveSuccess}
+        isAnonymous={mode === 'anonymous'}
       />
     </div>
   );
 };
+
+const StepBadge = ({ n }) => (
+  <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded-full text-xs font-bold">
+    {n}
+  </span>
+);
+
 
 export default DigitizePage;
