@@ -26,6 +26,7 @@ const ExtractionModal = ({
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [reportType, setReportType] = useState(initialReportType || '');
+  const [showImageOverlay, setShowImageOverlay] = useState(false);
 
   // Initialize data when modal opens
   useEffect(() => {
@@ -290,6 +291,18 @@ const ExtractionModal = ({
               </select>
             </div>
           </div>
+          {/* View Image button — mobile only */}
+          {imageUrl && (
+            <button
+              onClick={() => setShowImageOverlay(true)}
+              className="md:hidden flex items-center gap-1.5 px-3 py-1.5 mr-2 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              View Image
+            </button>
+          )}
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-200 rounded-full transition-colors"
@@ -355,8 +368,8 @@ const ExtractionModal = ({
 
         {/* Content - Split Layout */}
         <div className="flex-grow flex flex-col md:flex-row gap-4 md:gap-6 p-4 md:p-6 overflow-hidden">
-          {/* LEFT SIDE - Image Preview */}
-          <div className="w-full md:w-2/5 h-[40vh] md:h-full bg-gray-900 rounded-lg flex flex-col overflow-hidden">
+          {/* LEFT SIDE - Image Preview (hidden on mobile, shown via overlay instead) */}
+          <div className="hidden md:flex w-full md:w-2/5 md:h-full bg-gray-900 rounded-lg flex-col overflow-hidden">
             {/* Zoom Controls */}
             <div className="flex items-center justify-center gap-2 p-2 bg-gray-800">
               <button
@@ -629,6 +642,39 @@ const ExtractionModal = ({
           )}
         </div>
       </div>
+
+      {/* Fullscreen image overlay — mobile only */}
+      {showImageOverlay && imageUrl && (
+        <div className="fixed inset-0 z-[60] bg-black flex flex-col md:hidden">
+          {/* Overlay header */}
+          <div className="flex items-center justify-between px-4 py-3 bg-gray-900">
+            <div className="flex items-center gap-2">
+              <button onClick={() => setImageZoom((p) => Math.max(p - 0.25, 0.5))} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm">−</button>
+              <span className="text-white text-sm">{Math.round(imageZoom * 100)}%</span>
+              <button onClick={() => setImageZoom((p) => Math.min(p + 0.25, 3))} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm">+</button>
+              <button onClick={() => setImageZoom(1)} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm ml-1">Reset</button>
+            </div>
+            <button
+              onClick={() => { setShowImageOverlay(false); setImageZoom(1); }}
+              className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+          </div>
+          {/* Image */}
+          <div className="flex-grow overflow-auto flex items-center justify-center p-4">
+            <img
+              src={imageUrl}
+              alt="Medical Report"
+              className="max-w-full h-auto object-contain"
+              style={{ transform: `scale(${imageZoom})`, transformOrigin: 'center', transition: 'transform 0.2s ease' }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
