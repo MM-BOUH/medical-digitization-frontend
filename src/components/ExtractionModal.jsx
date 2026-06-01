@@ -606,7 +606,7 @@ const ExtractionModal = ({
               </button>
               <button
                 onClick={handleExportJSON}
-                className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-white bg-green-500 hover:bg-green-600 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
+                className="px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
