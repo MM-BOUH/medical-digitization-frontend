@@ -128,8 +128,9 @@ const DigitizePage = () => {
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
               Medical Report Digitization
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-gray-600">
-              Upload scanned medical reports for automatic classification and data extraction
+            <p className="mt-1 text-sm sm:text-base text-gray-600">
+              <span className="sm:hidden">Scan and digitize medical reports</span>
+              <span className="hidden sm:inline">Upload scanned medical reports for automatic classification and data extraction</span>
             </p>
           </div>
         </div>
@@ -272,7 +273,7 @@ const DigitizePage = () => {
                         (mode === 'phc' && (!patientId || !healthcareWorkerId)) ||
                         isUploading
                       }
-                      className="px-6 py-3 md:px-8 md:py-3.5 text-sm md:text-base font-semibold text-white bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg shadow-md transition-colors w-full sm:w-auto"
+                      className="px-6 py-3.5 md:px-8 text-sm md:text-base font-semibold text-white bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg shadow-md transition-colors w-full sm:w-auto"
                     >
                       Start Digitization
                     </button>

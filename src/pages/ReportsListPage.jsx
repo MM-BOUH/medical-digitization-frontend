@@ -118,18 +118,19 @@ const ReportsListPage = () => {
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
                 Medical Reports
               </h1>
-              <p className="mt-2 text-sm sm:text-base text-gray-600">
+              <p className="mt-1 text-sm sm:text-base text-gray-600">
                 View and manage digitized medical reports
               </p>
             </div>
             <button
               onClick={() => navigate('/digitize')}
-              className="flex items-center gap-2 px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-lg shadow-md transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 md:px-6 md:py-3 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-lg shadow-md transition-colors whitespace-nowrap"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Digitize New Report
+              <span className="hidden sm:inline">Digitize New Report</span>
+              <span className="sm:hidden">Digitize</span>
             </button>
           </div>
         </div>

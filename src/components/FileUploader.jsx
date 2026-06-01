@@ -218,19 +218,22 @@ const FileUploader = ({ onFileSelect, isUploading, disabled }) => {
           />
 
           {previewUrl ? (
-            <div className="relative">
-              <img src={previewUrl} alt="Preview" className="max-h-64 mx-auto rounded-lg shadow-md" />
-              <button
-                type="button"
-                onClick={handleClear}
-                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-colors"
-                aria-label="Remove file"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <p className="mt-3 text-center text-sm text-gray-600 truncate">{selectedFileName}</p>
+            <div className="flex flex-col items-center gap-3">
+              <img src={previewUrl} alt="Preview" className="max-h-64 w-auto rounded-lg shadow-md" />
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-gray-600 truncate max-w-[180px]">{selectedFileName}</p>
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
+                  aria-label="Remove file"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Remove
+                </button>
+              </div>
             </div>
           ) : (
             <div className="text-center">
