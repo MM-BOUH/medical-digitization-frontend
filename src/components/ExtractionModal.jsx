@@ -267,62 +267,55 @@ const ExtractionModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gray-50">
-          <div className="flex-1">
-            <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-800">
+        <div className="border-b border-gray-200 bg-gray-50">
+          {/* Row 1: title + actions */}
+          <div className="flex items-center justify-between px-4 pt-4 pb-2 md:px-6 md:pt-6">
+            <h2 className="text-base md:text-xl lg:text-2xl font-bold text-gray-800 leading-tight">
               Review Extracted Data
             </h2>
-            {/* Editable Report Type Dropdown */}
-            <div className="mt-2 flex items-center gap-2">
-              <label htmlFor="reportType" className="text-xs md:text-sm font-medium text-gray-600">
-                Report Type:
-              </label>
-              <select
-                id="reportType"
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-                className="px-3 py-1 text-xs md:text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+            <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+              {/* View Image — icon only on mobile */}
+              {imageUrl && (
+                <button
+                  onClick={() => setShowImageOverlay(true)}
+                  className="md:hidden flex items-center justify-center w-9 h-9 text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                  aria-label="View image"
+                  title="View image"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="flex items-center justify-center w-9 h-9 hover:bg-gray-200 rounded-full transition-colors"
+                aria-label="Close modal"
               >
-                <option value="Hematology">Hematology</option>
-                <option value="Clinical Chemistry">Clinical Chemistry</option>
-                <option value="Microbiology">Microbiology</option>
-                <option value="Urinalysis">Urinalysis</option>
-                <option value="Serology/Immunology">Serology/Immunology</option>
-              </select>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
-          {/* View Image button — mobile only */}
-          {imageUrl && (
-            <button
-              onClick={() => setShowImageOverlay(true)}
-              className="md:hidden flex items-center gap-1.5 px-3 py-1.5 mr-2 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg"
+          {/* Row 2: report type */}
+          <div className="flex items-center gap-2 px-4 pb-3 md:px-6 md:pb-4">
+            <label htmlFor="reportType" className="text-xs md:text-sm font-medium text-gray-600 whitespace-nowrap">
+              Report Type:
+            </label>
+            <select
+              id="reportType"
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+              className="px-3 py-1 text-xs md:text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              View Image
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-            aria-label="Close modal"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-gray-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+              <option value="Hematology">Hematology</option>
+              <option value="Clinical Chemistry">Clinical Chemistry</option>
+              <option value="Microbiology">Microbiology</option>
+              <option value="Urinalysis">Urinalysis</option>
+              <option value="Serology/Immunology">Serology/Immunology</option>
+            </select>
+          </div>
         </div>
 
         {/* Success/Error Messages */}
@@ -656,12 +649,12 @@ const ExtractionModal = ({
             </div>
             <button
               onClick={() => { setShowImageOverlay(false); setImageZoom(1); }}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Back
+              Back to Data
             </button>
           </div>
           {/* Image */}
