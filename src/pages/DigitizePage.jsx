@@ -40,7 +40,12 @@ const DigitizePage = () => {
     }
 
     if (mode === 'phc' && (!patientId || !healthcareWorkerId)) {
-      alert('Please select both a patient and a healthcare worker');
+      alert('Please enter both Patient ID and Healthcare Worker ID');
+      return;
+    }
+
+    if (mode === 'phc' && (!/^\d+$/.test(patientId.trim()) || !/^\d+$/.test(healthcareWorkerId.trim()))) {
+      alert('Invalid patient ID or healthcare worker ID');
       return;
     }
 
@@ -119,24 +124,13 @@ const DigitizePage = () => {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
-                Medical Report Digitization
-              </h1>
-              <p className="mt-2 text-sm sm:text-base text-gray-600">
-                Upload scanned medical reports for automatic classification and data extraction
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/reports')}
-              className="flex items-center gap-2 px-5 py-2.5 text-sm md:text-base font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              View Reports
-            </button>
+          <div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
+              Medical Report Digitization
+            </h1>
+            <p className="mt-2 text-sm sm:text-base text-gray-600">
+              Upload scanned medical reports for automatic classification and data extraction
+            </p>
           </div>
         </div>
       </header>
@@ -187,11 +181,25 @@ const DigitizePage = () => {
       {mode !== null && (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 lg:py-12">
           <div className="bg-white rounded-lg shadow-lg p-6 sm:p-8 md:p-10">
-            {/* Mode badge + change */}
+            {/* Mode badge + View Reports (PHC only) + change */}
             <div className="flex items-center justify-between mb-6">
-              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${mode === 'phc' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-                {mode === 'phc' ? 'PHC Mode' : 'Scan & Extract'}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${mode === 'phc' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                  {mode === 'phc' ? 'PHC Mode' : 'Scan & Extract'}
+                </span>
+                {mode === 'phc' && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/reports')}
+                    className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-full transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    View Reports
+                  </button>
+                )}
+              </div>
               <button
                 onClick={handleChangeMode}
                 className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"

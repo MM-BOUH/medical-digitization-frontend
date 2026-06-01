@@ -5,6 +5,17 @@ export const resolveImageUrl = (url) => {
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   return `${BASE_URL}${url}`;
 };
+
+export const validateIds = async (patientId, healthcareWorkerId) => {
+  const response = await fetch(`${BASE_URL}/api/validate-ids/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ patient_id: patientId, healthcare_worker_id: healthcareWorkerId }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'Validation failed');
+  return data;
+};
 /**
  * Digitize a medical report without linking to PHC (no patient/worker IDs, nothing saved to DB)
  * @param {File} imageFile - The medical report image file
