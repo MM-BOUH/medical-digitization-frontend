@@ -441,7 +441,7 @@ const ExtractionModal = ({
                 <div className="flex items-center justify-between mb-4">
                   <input
                     type="text"
-                    value={result.result_type || 'Results'}
+                    value={result.result_type ?? ''}
                     onChange={(e) =>
                       handleResultChange(resultIndex, null, 'result_type', e.target.value)
                     }
