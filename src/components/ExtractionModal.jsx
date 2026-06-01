@@ -638,7 +638,7 @@ const ExtractionModal = ({
 
       {/* Fullscreen image overlay — mobile only */}
       {showImageOverlay && imageUrl && (
-        <div className="fixed inset-0 z-[60] bg-black flex flex-col md:hidden">
+        <div className="fixed inset-0 z-[60] bg-black flex flex-col md:hidden" onClick={(e) => e.stopPropagation()}>
           {/* Overlay header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gray-900">
             <div className="flex items-center gap-2">
