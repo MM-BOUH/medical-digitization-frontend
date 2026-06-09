@@ -13,7 +13,7 @@ const FileUploader = ({ onFileSelect, isUploading, disabled }) => {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
 
-  const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+  const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
   const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
   useEffect(() => {
@@ -43,7 +43,7 @@ const FileUploader = ({ onFileSelect, isUploading, disabled }) => {
     if (!file) return;
 
     if (!acceptedTypes.includes(file.type)) {
-      alert('Unsupported format. Please use JPG, PNG, or PDF.');
+      alert('Unsupported format. Please upload an image (JPG, PNG, etc.). PDF support is coming soon.');
       return;
     }
 
@@ -211,7 +211,7 @@ const FileUploader = ({ onFileSelect, isUploading, disabled }) => {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".jpg,.jpeg,.png,.pdf"
+            accept=".jpg,.jpeg,.png"
             onChange={handleInputChange}
             className="hidden"
             disabled={disabled || isUploading}
@@ -242,7 +242,7 @@ const FileUploader = ({ onFileSelect, isUploading, disabled }) => {
               </svg>
               <h3 className="mt-4 text-base sm:text-lg font-semibold text-gray-800">Upload Medical Report</h3>
               <p className="mt-2 text-sm text-gray-600">Drag and drop your file here, or click to browse</p>
-              <p className="mt-1 text-xs text-gray-500">Supported formats: JPG, PNG, PDF</p>
+              <p className="mt-1 text-xs text-gray-500">Image files: JPG, PNG, etc. (PDF coming soon)</p>
               <p className="mt-1 text-xs font-medium text-red-500">Maximum file size: 10MB</p>
             </div>
           )}
