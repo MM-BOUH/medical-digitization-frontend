@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FileUploader from '../components/FileUploader';
 import StatusIndicator from '../components/StatusIndicator';
+import LowQualityNotice from '../components/LowQualityNotice';
 import ExtractionModal from '../components/ExtractionModal';
 import { digitizeReport, digitizeAnonymous } from '../actions/medicalReports';
 
@@ -18,6 +19,7 @@ const DigitizePage = () => {
   const [showModal, setShowModal] = useState(false);
   const [patientId, setPatientId] = useState('');
   const [healthcareWorkerId, setHealthcareWorkerId] = useState('');
+  const [qualityIssue, setQualityIssue] = useState(null);
 
 
   const handleFileSelect = (file) => {
@@ -28,6 +30,7 @@ const DigitizePage = () => {
       setReportType('');
       setExtractedData(null);
       setShowModal(false);
+      setQualityIssue(null);
     }
   };
 
@@ -90,8 +93,20 @@ const DigitizePage = () => {
         setStatusMessage('Failed to extract data');
       }
     } catch (error) {
-      setStatus('error');
-      setStatusMessage(error.message || 'An error occurred during digitization');
+      if (error.isQualityError) {
+        // HTTP 422 — the photo itself needs to be retaken (distinct from a
+        // generic error). Show retake guidance instead of the result screen.
+        setQualityIssue({
+          message: error.message,
+          failed: error.failed,
+          reasons: error.reasons,
+        });
+        setStatus('low-quality');
+        setStatusMessage(error.message);
+      } else {
+        setStatus('error');
+        setStatusMessage(error.message || 'An error occurred during digitization');
+      }
     } finally {
       setIsUploading(false);
     }
@@ -110,6 +125,7 @@ const DigitizePage = () => {
     setReportType('');
     setExtractedData(null);
     setShowModal(false);
+    setQualityIssue(null);
   };
 
   const handleChangeMode = () => {
@@ -256,7 +272,15 @@ const DigitizePage = () => {
               />
 
               {/* Status */}
-              {status !== 'idle' && (
+              {status === 'low-quality' ? (
+                <div className="mt-8">
+                  <LowQualityNotice
+                    message={qualityIssue?.message}
+                    failed={qualityIssue?.failed}
+                    reasons={qualityIssue?.reasons}
+                  />
+                </div>
+              ) : status !== 'idle' && (
                 <div className="mt-8">
                   <StatusIndicator status={status} message={statusMessage} reportType={reportType} />
                 </div>
@@ -264,7 +288,18 @@ const DigitizePage = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 mt-8">
-                {(status === 'idle' || status === 'error' || status === 'not-medical') ? (
+                {status === 'low-quality' ? (
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="flex items-center justify-center gap-2 px-6 py-3.5 md:px-8 text-sm md:text-base font-semibold text-white bg-amber-500 hover:bg-amber-600 rounded-lg shadow-md transition-colors w-full sm:w-auto"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Retake / Choose another photo
+                  </button>
+                ) : (status === 'idle' || status === 'error' || status === 'not-medical') ? (
                   <>
                     <button
                       type="submit"

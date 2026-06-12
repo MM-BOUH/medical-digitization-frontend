@@ -6,6 +6,22 @@ export const resolveImageUrl = (url) => {
   return `${BASE_URL}${url}`;
 };
 
+/**
+ * Thrown when the backend rejects an upload (HTTP 422) because the photo
+ * itself is too low-quality to process. Carries friendly guidance for the
+ * user; raw `metrics` are kept for debugging only and never shown to users.
+ */
+export class QualityError extends Error {
+  constructor(data = {}) {
+    super(data.message || 'The photo quality is too low. Please retake it and try again.');
+    this.name = 'QualityError';
+    this.isQualityError = true;
+    this.failed = Array.isArray(data.failed) ? data.failed : [];
+    this.reasons = data.reasons || {};
+    this.metrics = data.metrics || {};
+  }
+}
+
 export const validateIds = async (patientId, healthcareWorkerId) => {
   const response = await fetch(`${BASE_URL}/api/validate-ids/`, {
     method: 'POST',
@@ -34,6 +50,11 @@ export const digitizeAnonymous = async (imageFile) => {
       body: formData,
       signal: controller.signal,
     });
+
+    if (response.status === 422) {
+      const data = await response.json().catch(() => ({}));
+      throw new QualityError(data);
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -76,6 +97,11 @@ export const digitizeReport = async (imageFile, patientId, healthcareWorkerId) =
       body: formData,
       signal: controller.signal,
     });
+
+    if (response.status === 422) {
+      const data = await response.json().catch(() => ({}));
+      throw new QualityError(data);
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
