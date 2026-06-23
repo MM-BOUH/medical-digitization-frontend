@@ -342,14 +342,14 @@ const DigitizePage = () => {
               {mode === 'phc' ? (
                 <>
                   <li className="flex items-start gap-3"><StepBadge n={1} />Select a patient and healthcare worker from the PHC system</li>
-                  <li className="flex items-start gap-3"><StepBadge n={2} />Upload a clear image of the medical report — JPG, PNG, etc. (PDF coming soon)</li>
+                  <li className="flex items-start gap-3"><StepBadge n={2} />Upload a clear scan, photo, or PDF of the medical report — PDF, JPG, JPEG, or PNG (PDFs: first page only)</li>
                   <li className="flex items-start gap-3"><StepBadge n={3} />The system classifies the report type and extracts structured data</li>
                   <li className="flex items-start gap-3"><StepBadge n={4} />Review and edit the extracted data before saving</li>
                   <li className="flex items-start gap-3"><StepBadge n={5} />Confirm and save the digitized report to the PHC database</li>
                 </>
               ) : (
                 <>
-                  <li className="flex items-start gap-3"><StepBadge n={1} />Upload a clear image of the medical report — JPG, PNG, etc. (PDF coming soon)</li>
+                  <li className="flex items-start gap-3"><StepBadge n={1} />Upload a clear scan, photo, or PDF of the medical report — PDF, JPG, JPEG, or PNG (PDFs: first page only)</li>
                   <li className="flex items-start gap-3"><StepBadge n={2} />The system classifies the report type and extracts structured data</li>
                   <li className="flex items-start gap-3"><StepBadge n={3} />Review and edit the extracted data</li>
                   <li className="flex items-start gap-3"><StepBadge n={4} />Export the result as JSON or CSV — nothing is saved to the database</li>

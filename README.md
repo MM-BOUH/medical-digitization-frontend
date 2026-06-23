@@ -111,7 +111,7 @@ The application will open at `http://localhost:3000`
    - Enter Healthcare Worker ID
 
 2. **Upload Report**
-   - Drag and drop a medical report image (JPG, PNG, etc.; PDF coming soon)
+   - Drag and drop a medical report file (PDF, JPG, JPEG, PNG; PDFs use the first page only)
    - Or click to browse and select a file
    - File must be under 10MB
 
@@ -177,7 +177,7 @@ The frontend expects the following Django endpoints:
 Content-Type: multipart/form-data
 
 FormData:
-- image: File (JPG, PNG, etc.; PDF coming soon)
+- image: File (PDF, JPG, JPEG, PNG; PDFs use the first page only)
 - patient_id: String
 - healthcare_worker_id: String
 ```

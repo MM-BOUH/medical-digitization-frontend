@@ -13,7 +13,7 @@ const FileUploader = ({ onFileSelect, isUploading, disabled }) => {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
 
-  const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+  const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
   const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
   useEffect(() => {
@@ -43,7 +43,7 @@ const FileUploader = ({ onFileSelect, isUploading, disabled }) => {
     if (!file) return;
 
     if (!acceptedTypes.includes(file.type)) {
-      alert('Unsupported format. Please upload an image (JPG, PNG, etc.). PDF support is coming soon.');
+      alert('Unsupported format. Please use PDF, JPG, JPEG, or PNG.');
       return;
     }
 
@@ -196,13 +196,13 @@ const FileUploader = ({ onFileSelect, isUploading, disabled }) => {
           className={`relative border-2 border-dashed rounded-xl p-6 sm:p-8 md:p-10 transition-all duration-200 ${
             isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
           } ${disabled || isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${
-            previewUrl ? 'bg-gray-50' : 'bg-white'
+            selectedFileName ? 'bg-gray-50' : 'bg-white'
           }`}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          onClick={!previewUrl ? handleUploadZoneClick : undefined}
+          onClick={!selectedFileName ? handleUploadZoneClick : undefined}
           role="button"
           tabIndex={disabled || isUploading ? -1 : 0}
           onKeyDown={(e) => e.key === 'Enter' && handleUploadZoneClick()}
@@ -211,15 +211,26 @@ const FileUploader = ({ onFileSelect, isUploading, disabled }) => {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png"
             onChange={handleInputChange}
             className="hidden"
             disabled={disabled || isUploading}
           />
 
-          {previewUrl ? (
+          {selectedFileName ? (
             <div className="flex flex-col items-center gap-3">
-              <img src={previewUrl} alt="Preview" className="max-h-64 w-auto rounded-lg shadow-md" />
+              {previewUrl ? (
+                <img src={previewUrl} alt="Preview" className="max-h-64 w-auto rounded-lg shadow-md" />
+              ) : (
+                /* Non-image (PDF) — no inline preview, show a file icon instead */
+                <div className="flex flex-col items-center gap-2 py-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 3v5a1 1 0 001 1h5" />
+                  </svg>
+                  <span className="text-xs font-semibold text-red-500">PDF · first page only</span>
+                </div>
+              )}
               <div className="flex items-center gap-3">
                 <p className="text-sm text-gray-600 truncate max-w-[180px]">{selectedFileName}</p>
                 <button
@@ -242,7 +253,8 @@ const FileUploader = ({ onFileSelect, isUploading, disabled }) => {
               </svg>
               <h3 className="mt-4 text-base sm:text-lg font-semibold text-gray-800">Upload Medical Report</h3>
               <p className="mt-2 text-sm text-gray-600">Drag and drop your file here, or click to browse</p>
-              <p className="mt-1 text-xs text-gray-500">Image files: JPG, PNG, etc. (PDF coming soon)</p>
+              <p className="mt-1 text-xs text-gray-500">Supported formats: PDF, JPG, JPEG, PNG</p>
+              <p className="mt-1 text-xs text-gray-500">PDFs: first page only</p>
               <p className="mt-1 text-xs font-medium text-red-500">Maximum file size: 10MB</p>
             </div>
           )}
